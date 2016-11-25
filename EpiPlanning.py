@@ -1,15 +1,26 @@
 from getpass import getpass
+from sys import stderr
 import requests
 import json
 
 class EpiPlanning:
     def __init__(self):
-        form_data = {
-            'login': raw_input("Enter your login : "),
-            'password': getpass("Enter your password : ")
-        }
-        self.session = requests.session()
-        self.session.post('https://intra.epitech.eu/', form_data)
+        ret = 0
+        retry = 0
+        while ret != 200 and retry < 3:
+            form_data = {
+                'login': raw_input("Enter your login : "),
+                'password': getpass("Enter your password : ")
+            }
+            self.session = requests.session()
+            res = self.session.post('https://intra.epitech.eu/', form_data)
+            ret = res.status_code
+            if ret != 200:
+                retry += 1
+                if retry < 3:
+                    stderr.write('Failed to authenticate. Please retry.\n')
+                else:
+                    exit('Too many retries. Good bye!')
 
     def get_planning(self, outfile='planning.json', date_from='1999-08-29', date_to='2099-08-28'):
         url = 'https://intra.epitech.eu/planning/load?format=json&start=%s&end=%s' % (date_from, date_to)
